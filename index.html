@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamWatchtower — Multi-Stream Viewer for Twitch</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo-area">
+            <span class="pulse-icon"></span>
+            <h1>StreamWatchtower</h1>
+        </div>
+        
+        <form id="add-channel-form" class="add-form">
+            <input type="text" id="channel-input" placeholder="Twitch username or channel URL..." required autocomplete="off">
+            <button type="submit" class="btn-primary">Add Channel</button>
+        </form>
+
+        <button id="back-to-grid-btn" class="btn-secondary hidden">Back to Grid</button>
+    </header>
+
+    <main class="app-container">
+        <!-- Empty state placeholder -->
+        <div id="empty-state" class="empty-state">
+            <div class="empty-icon">📺</div>
+            <h2>No channels active</h2>
+            <p>Add Twitch channels in the topbar or try one of these examples:</p>
+            <div class="examples">
+                <button class="example-btn" data-channel="xqcow">xqcow</button>
+                <button class="example-btn" data-channel="shroud">shroud</button>
+                <button class="example-btn" data-channel="ninja">ninja</button>
+            </div>
+        </div>
+
+        <!-- Container where the stream tiles will be rendered -->
+        <div id="tiles" class="tiles-grid"></div>
+        
+        <!-- Chat container (will be used in Focus mode, initially empty) -->
+        <div id="chat-container" class="chat-sidebar hidden"></div>
+    </main>
+
+    <!-- Twitch Embed API -->
+    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
+    <!-- App Entry Point -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
