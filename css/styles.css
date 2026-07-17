@@ -423,3 +423,43 @@ body {
   }
 }
 
+/* Playback Blocked Warning Badge */
+.playback-blocked-hint {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(235, 4, 0, 0.95) 0%, rgba(180, 3, 0, 0.95) 100%);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+  pointer-events: auto;
+  user-select: none;
+  animation: slideDownFadeIn 0.3s ease-out;
+  white-space: nowrap;
+}
+
+.playback-blocked-hint:hover {
+  background: linear-gradient(135deg, rgba(255, 30, 20, 0.95) 0%, rgba(200, 10, 0, 0.95) 100%);
+  box-shadow: 0 6px 20px rgba(145, 71, 255, 0.3);
+}
+
+@keyframes slideDownFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+

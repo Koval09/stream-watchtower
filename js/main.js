@@ -1,4 +1,4 @@
-import { createPlayer, destroyPlayer } from './players.js';
+import { createPlayer, destroyPlayer, setAudioTo, updateQualities } from './players.js';
 import { getChannels, addChannel, removeChannel, onChannelsChange } from './state.js';
 import { enterFocus, exitFocus, isFocusModeActive, getFocusedChannel } from './layout.js';
 
@@ -70,6 +70,8 @@ function renderTile(nick) {
   header.addEventListener('click', (e) => {
     e.stopPropagation();
     enterFocus(nick);
+    setAudioTo(nick); // Sound follows focus
+    updateQualities();
   });
 
   const nameSpan = document.createElement('span');
@@ -81,11 +83,20 @@ function renderTile(nick) {
   const actions = document.createElement('div');
   actions.className = 'tile-actions';
 
-  // Sound/Mute Button (placeholder functionality for Stage 3)
+  // Sound/Mute Button (exclusive audio toggler)
   const muteBtn = document.createElement('button');
   muteBtn.className = 'tile-btn mute-btn';
-  muteBtn.title = 'Mute/Unmute';
+  muteBtn.title = 'Unmute (exclusive)';
   muteBtn.innerHTML = '🔇';
+  muteBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent entering focus mode when clicking sound button
+    const isCurrentlyUnmuted = muteBtn.classList.contains('unmuted');
+    if (isCurrentlyUnmuted) {
+      setAudioTo(null); // Mute all
+    } else {
+      setAudioTo(nick); // Unmute this channel exclusively
+    }
+  });
   actions.appendChild(muteBtn);
 
   // Close Button (✕)
@@ -112,6 +123,8 @@ function renderTile(nick) {
   tile.addEventListener('click', () => {
     if (isFocusModeActive() && tile.classList.contains('mini')) {
       enterFocus(nick);
+      setAudioTo(nick); // Sound follows focus
+      updateQualities();
     }
   });
 
@@ -145,6 +158,8 @@ document.querySelectorAll('.example-btn').forEach(btn => {
 // Wire up "Back to Grid" button
 backBtn.addEventListener('click', () => {
   exitFocus();
+  setAudioTo(null); // Mute all when returning to Grid mode
+  updateQualities();
 });
 
 // Sync absolute position of focused tile with horizontal scrolling of mini tiles
@@ -158,15 +173,18 @@ tilesContainer.addEventListener('scroll', () => {
 onChannelsChange((currentChannels, action, channel) => {
   if (action === 'add') {
     renderTile(channel);
+    updateQualities();
   } else if (action === 'remove') {
     const tile = tilesContainer.querySelector(`.tile[data-channel="${channel}"]`);
     if (tile) {
       tile.remove();
     }
-    // If the currently focused channel is removed, exit focus mode
+    // If the currently focused channel is removed, exit focus mode and mute
     if (channel === getFocusedChannel()) {
       exitFocus();
+      setAudioTo(null);
     }
+    updateQualities();
   }
   updateEmptyState(currentChannels);
 });
@@ -181,12 +199,17 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (isFocusModeActive()) {
       exitFocus();
+      setAudioTo(null);
+      updateQualities();
     }
   } else if (e.key >= '1' && e.key <= '9') {
     const index = parseInt(e.key, 10) - 1;
     const channelsList = getChannels();
     if (index < channelsList.length) {
-      enterFocus(channelsList[index]);
+      const targetNick = channelsList[index];
+      enterFocus(targetNick);
+      setAudioTo(targetNick);
+      updateQualities();
     }
   }
 });
