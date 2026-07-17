@@ -345,3 +345,81 @@ body {
     margin: 0;
   }
 }
+
+/* --- Focus Mode Styles --- */
+
+/* Chat Sidebar on the Right */
+.chat-sidebar {
+  width: 340px;
+  height: 100%;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-sidebar iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* Focus layout on Tiles Container */
+.tiles-grid.focus-layout {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* The Focused stream tile (takes top area) */
+.tiles-grid.focus-layout .tile.focused {
+  position: absolute;
+  top: 12px;
+  left: calc(12px + var(--scroll-left, 0px));
+  width: calc(100% - 24px);
+  bottom: 184px; /* 160px height + 12px gap + 12px padding */
+  height: auto;
+  aspect-ratio: auto; /* Allow flexible height */
+  z-index: 5;
+}
+
+/* Other stream tiles in Focus mode (horizontal ribbon) */
+.tiles-grid.focus-layout .tile.mini {
+  flex: 0 0 284px; /* 160px * (16/9) */
+  height: 160px;
+  aspect-ratio: 16 / 9;
+  z-index: 6;
+}
+
+/* Responsive adjustment for Focus mode */
+@media (max-width: 900px) {
+  .chat-sidebar {
+    display: none !important; /* Hide chat sidebar on smaller screens */
+  }
+  
+  /* On extremely small screens, reduce the height of mini-windows */
+  @media (max-height: 500px) {
+    .tiles-grid.focus-layout {
+      grid-template-rows: 1fr 100px;
+    }
+    .tiles-grid.focus-layout .tile.mini {
+      flex: 0 0 177px;
+      height: 100px;
+    }
+    .tiles-grid.focus-layout .tile.focused {
+      bottom: 124px;
+    }
+  }
+}
+

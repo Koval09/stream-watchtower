@@ -1,10 +1,12 @@
 import { createPlayer, destroyPlayer } from './players.js';
 import { getChannels, addChannel, removeChannel, onChannelsChange } from './state.js';
+import { enterFocus, exitFocus, isFocusModeActive, getFocusedChannel } from './layout.js';
 
 const form = document.getElementById('add-channel-form');
 const input = document.getElementById('channel-input');
 const tilesContainer = document.getElementById('tiles');
 const emptyState = document.getElementById('empty-state');
+const backBtn = document.getElementById('back-to-grid-btn');
 
 /**
  * Normalizes input: extracts channel username from URL, trims, converts to lowercase
@@ -55,9 +57,20 @@ function renderTile(nick) {
   tile.className = 'tile';
   tile.setAttribute('data-channel', nick);
 
+  // If focus mode is already active, new tiles start as mini-windows
+  if (isFocusModeActive()) {
+    tile.classList.add('mini');
+  }
+
   // Header element
   const header = document.createElement('div');
   header.className = 'tile-header';
+  
+  // Clicking header opens focus mode (or switches focus)
+  header.addEventListener('click', (e) => {
+    e.stopPropagation();
+    enterFocus(nick);
+  });
 
   const nameSpan = document.createElement('span');
   nameSpan.className = 'channel-name';
@@ -68,7 +81,7 @@ function renderTile(nick) {
   const actions = document.createElement('div');
   actions.className = 'tile-actions';
 
-  // Sound/Mute Button (placeholder functionality for Stage 1 & 2)
+  // Sound/Mute Button (placeholder functionality for Stage 3)
   const muteBtn = document.createElement('button');
   muteBtn.className = 'tile-btn mute-btn';
   muteBtn.title = 'Mute/Unmute';
@@ -94,6 +107,13 @@ function renderTile(nick) {
   playerContainer.className = 'tile-player-container';
   playerContainer.id = `player-container-${nick}`;
   tile.appendChild(playerContainer);
+
+  // Switch focus if clicking on a mini-tile in Focus mode
+  tile.addEventListener('click', () => {
+    if (isFocusModeActive() && tile.classList.contains('mini')) {
+      enterFocus(nick);
+    }
+  });
 
   tilesContainer.appendChild(tile);
 
@@ -122,6 +142,18 @@ document.querySelectorAll('.example-btn').forEach(btn => {
   });
 });
 
+// Wire up "Back to Grid" button
+backBtn.addEventListener('click', () => {
+  exitFocus();
+});
+
+// Sync absolute position of focused tile with horizontal scrolling of mini tiles
+tilesContainer.addEventListener('scroll', () => {
+  if (isFocusModeActive()) {
+    tilesContainer.style.setProperty('--scroll-left', `${tilesContainer.scrollLeft}px`);
+  }
+});
+
 // Listen for state changes (pub/sub synchronization)
 onChannelsChange((currentChannels, action, channel) => {
   if (action === 'add') {
@@ -131,8 +163,32 @@ onChannelsChange((currentChannels, action, channel) => {
     if (tile) {
       tile.remove();
     }
+    // If the currently focused channel is removed, exit focus mode
+    if (channel === getFocusedChannel()) {
+      exitFocus();
+    }
   }
   updateEmptyState(currentChannels);
+});
+
+// Keyboard Shortcuts (Hotkeys)
+window.addEventListener('keydown', (e) => {
+  // Disable hotkeys when user is actively typing in inputs
+  if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+    return;
+  }
+
+  if (e.key === 'Escape') {
+    if (isFocusModeActive()) {
+      exitFocus();
+    }
+  } else if (e.key >= '1' && e.key <= '9') {
+    const index = parseInt(e.key, 10) - 1;
+    const channelsList = getChannels();
+    if (index < channelsList.length) {
+      enterFocus(channelsList[index]);
+    }
+  }
 });
 
 // Initial load (restore state from URL or localStorage)
