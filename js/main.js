@@ -1,7 +1,5 @@
 import { createPlayer, destroyPlayer } from './players.js';
-
-// In-memory list of channel names (stage 1)
-let channels = [];
+import { getChannels, addChannel, removeChannel, onChannelsChange } from './state.js';
 
 const form = document.getElementById('add-channel-form');
 const input = document.getElementById('channel-input');
@@ -36,52 +34,16 @@ function extractChannelName(rawInput) {
 
 /**
  * Updates the empty state container visibility based on active channels
+ * @param {string[]} currentChannels 
  */
-function updateEmptyState() {
-  if (channels.length === 0) {
+function updateEmptyState(currentChannels) {
+  if (currentChannels.length === 0) {
     emptyState.classList.remove('hidden');
     tilesContainer.classList.add('hidden');
   } else {
     emptyState.classList.add('hidden');
     tilesContainer.classList.remove('hidden');
   }
-}
-
-/**
- * Adds a channel to the dashboard
- * @param {string} channelInput 
- */
-function addChannel(channelInput) {
-  const nick = extractChannelName(channelInput);
-  if (!nick) return;
-
-  if (channels.includes(nick)) {
-    console.warn(`Channel "${nick}" is already added.`);
-    return;
-  }
-
-  channels.push(nick);
-  renderTile(nick);
-  updateEmptyState();
-}
-
-/**
- * Removes a channel from the dashboard
- * @param {string} nick 
- */
-function removeChannel(nick) {
-  channels = channels.filter(c => c !== nick);
-  
-  // Destroy the player instance
-  destroyPlayer(nick);
-  
-  // Remove tile from DOM
-  const tile = tilesContainer.querySelector(`.tile[data-channel="${nick}"]`);
-  if (tile) {
-    tile.remove();
-  }
-
-  updateEmptyState();
 }
 
 /**
@@ -106,7 +68,7 @@ function renderTile(nick) {
   const actions = document.createElement('div');
   actions.className = 'tile-actions';
 
-  // Sound/Mute Button (placeholder functionality for Stage 1)
+  // Sound/Mute Button (placeholder functionality for Stage 1 & 2)
   const muteBtn = document.createElement('button');
   muteBtn.className = 'tile-btn mute-btn';
   muteBtn.title = 'Mute/Unmute';
@@ -143,7 +105,10 @@ function renderTile(nick) {
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const rawInput = input.value;
-  addChannel(rawInput);
+  const nick = extractChannelName(rawInput);
+  if (nick) {
+    addChannel(nick);
+  }
   input.value = '';
 });
 
@@ -157,5 +122,20 @@ document.querySelectorAll('.example-btn').forEach(btn => {
   });
 });
 
-// Initial View Setup
-updateEmptyState();
+// Listen for state changes (pub/sub synchronization)
+onChannelsChange((currentChannels, action, channel) => {
+  if (action === 'add') {
+    renderTile(channel);
+  } else if (action === 'remove') {
+    const tile = tilesContainer.querySelector(`.tile[data-channel="${channel}"]`);
+    if (tile) {
+      tile.remove();
+    }
+  }
+  updateEmptyState(currentChannels);
+});
+
+// Initial load (restore state from URL or localStorage)
+const initialChannels = getChannels();
+initialChannels.forEach(nick => renderTile(nick));
+updateEmptyState(initialChannels);
