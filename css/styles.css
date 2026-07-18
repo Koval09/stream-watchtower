@@ -350,6 +350,7 @@ body {
 
 /* Chat Sidebar on the Right */
 .chat-sidebar {
+  position: relative;
   width: 340px;
   height: 100%;
   background-color: var(--bg-surface);
@@ -357,12 +358,58 @@ body {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-sidebar.collapsed {
+  width: 0;
+  border-left: none;
+}
+
+.chat-iframe-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  transition: opacity 0.2s ease-out;
+}
+
+.chat-sidebar.collapsed .chat-iframe-wrapper {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .chat-sidebar iframe {
   border: none;
   width: 100%;
   height: 100%;
+}
+
+.collapse-chat-btn {
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex; /* Always display in Focus Mode */
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  font-size: 0.7rem;
+  padding: 0;
+  line-height: 1;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.collapse-chat-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-surface-hover);
 }
 
 /* Focus layout on Tiles Container */
@@ -400,26 +447,34 @@ body {
   height: 160px;
   aspect-ratio: 16 / 9;
   z-index: 6;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Responsive adjustment for Focus mode */
-@media (max-width: 900px) {
-  .chat-sidebar {
-    display: none !important; /* Hide chat sidebar on smaller screens */
+/* Scale down the player inside mini tiles to bypass Twitch's 400x300 minimum autoplay check */
+.tiles-grid.focus-layout .tile.mini .tile-player-container {
+  position: absolute;
+  top: 36px; /* Position below header */
+  left: 0;
+  width: 687px;
+  height: 300px;
+  transform: scale(0.4133); /* scale 300px height to 124px available space */
+  transform-origin: top left;
+}
+
+
+
+/* On extremely small screens, reduce the height of mini-windows */
+@media (max-height: 500px) {
+  .tiles-grid.focus-layout {
+    grid-template-rows: 1fr 100px;
   }
-  
-  /* On extremely small screens, reduce the height of mini-windows */
-  @media (max-height: 500px) {
-    .tiles-grid.focus-layout {
-      grid-template-rows: 1fr 100px;
-    }
-    .tiles-grid.focus-layout .tile.mini {
-      flex: 0 0 177px;
-      height: 100px;
-    }
-    .tiles-grid.focus-layout .tile.focused {
-      bottom: 124px;
-    }
+  .tiles-grid.focus-layout .tile.mini {
+    flex: 0 0 177px;
+    height: 100px;
+  }
+  .tiles-grid.focus-layout .tile.focused {
+    bottom: 124px;
   }
 }
 
@@ -461,5 +516,153 @@ body {
     transform: translate(-50%, 0);
   }
 }
+
+/* Offline Badge */
+.offline-badge {
+  position: absolute;
+  top: 48px;
+  left: 12px;
+  background-color: rgba(235, 4, 0, 0.85); /* Red Twitch offline style */
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 8;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+}
+
+/* Help Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal.hidden {
+  display: none !important;
+}
+
+.modal-content {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 550px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.modal-header h2 {
+  font-size: 1.15rem;
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 20px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.modal-body h3 {
+  color: var(--text-primary);
+  font-size: 1rem;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.modal-body ol {
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.modal-body li {
+  margin-bottom: 12px;
+}
+
+.modal-body ul {
+  padding-left: 20px;
+  margin-top: 4px;
+  list-style-type: disc;
+}
+
+.modal-body code {
+  background-color: rgba(255, 255, 255, 0.07);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--accent);
+}
+
+.modal-tip {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background-color: rgba(145, 71, 255, 0.1);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
 
 

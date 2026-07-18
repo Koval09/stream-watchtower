@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamWatchtower — Multi-Stream Viewer for Twitch</title>
+    <!-- SVG emoji favicon (Castle/Watchtower 🏰) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%220.9em%22 font-size=%2290%22>🏰</text></svg>">
     <link rel="stylesheet" href="css/styles.css">
     <!-- Google Fonts for premium typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,7 +24,10 @@
             <button type="submit" class="btn-primary">Add Channel</button>
         </form>
 
-        <button id="back-to-grid-btn" class="btn-secondary hidden">Back to Grid</button>
+        <div class="topbar-actions">
+            <button id="auth-help-btn" class="btn-secondary" style="margin-right: 8px;">🔑 Fix Ads / Login</button>
+            <button id="back-to-grid-btn" class="btn-secondary hidden">Back to Grid</button>
+        </div>
     </header>
 
     <main class="app-container">
@@ -41,9 +46,59 @@
         <!-- Container where the stream tiles will be rendered -->
         <div id="tiles" class="tiles-grid"></div>
         
-        <!-- Chat container (will be used in Focus mode, initially empty) -->
-        <div id="chat-container" class="chat-sidebar hidden"></div>
+        <!-- Chat container with collapse button and inner iframe wrapper -->
+        <div id="chat-container" class="chat-sidebar hidden">
+            <button id="collapse-chat-btn" class="collapse-chat-btn" title="Toggle Chat">▶</button>
+            <div id="chat-iframe-wrapper" class="chat-iframe-wrapper"></div>
+        </div>
     </main>
+
+    <!-- Modal for Twitch Login & Cookie Fix info -->
+    <div id="help-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔑 Twitch Login & Cookie Fix</h2>
+                <button id="close-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Embedded Twitch streams use security-isolated <code>&lt;iframe&gt;</code>s. Modern browsers block <strong>third-party cookies</strong> by default, which prevents the embedded player from recognizing your Twitch account (even if you are logged in on twitch.tv in another tab).</p>
+                
+                <p>This triggers Twitch's multi-stream limits and displays the permanent <strong>"Commercial break in progress"</strong> screen.</p>
+                
+                <h3>How to fix this:</h3>
+                <ol>
+                    <li>
+                        <strong>Add a Cookie Exception in Chrome Settings (Recommended):</strong>
+                        <ul>
+                            <li>Copy this address: <code>chrome://settings/cookies</code> and open it in a new browser tab.</li>
+                            <li>Scroll down to the <strong>"Sites allowed to use third-party cookies" (Разрешено использовать сторонние файлы cookie)</strong> section.</li>
+                            <li>Click the <strong>"Add" (Добавить)</strong> button.</li>
+                            <li>Enter exactly: <code>[*.]twitch.tv</code> and click Add.</li>
+                            <li>Go back to StreamWatchtower and refresh the page!</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Alternative: Use the link in the popover:</strong>
+                        <ul>
+                            <li>Click the circular info icon <strong>ⓘ</strong> next to <code>localhost:8000</code>.</li>
+                            <li>Select <strong>"Cookies and site data" (Файлы cookie и данные сайтов)</strong>.</li>
+                            <li>Click the underlined <strong>"Settings" (Настройки)</strong> link in the text description.</li>
+                            <li>This will take you to Chrome settings where you can add the <code>[*.]twitch.tv</code> exception as described in step 1.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Log In inside the Embed:</strong>
+                        <ul>
+                            <li>Open any stream in Focus Mode, click the <strong>"Log In / Войти"</strong> button inside the Chat sidebar, and complete the Twitch login.</li>
+                        </ul>
+                    </li>
+                </ol>
+                <div class="modal-tip">
+                    <strong>💡 Pro-Tip:</strong> Once third-party cookies are allowed, Twitch embeds will securely read your main <code>twitch.tv</code> session. If you have Twitch Turbo or are subscribed to the channel, all ads and "Commercial Break" warnings will vanish!
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Twitch Embed API -->
     <script src="https://player.twitch.tv/js/embed/v1.js"></script>

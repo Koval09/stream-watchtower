@@ -7,6 +7,11 @@ const input = document.getElementById('channel-input');
 const tilesContainer = document.getElementById('tiles');
 const emptyState = document.getElementById('empty-state');
 const backBtn = document.getElementById('back-to-grid-btn');
+const chatContainer = document.getElementById('chat-container');
+const collapseChatBtn = document.getElementById('collapse-chat-btn');
+const authHelpBtn = document.getElementById('auth-help-btn');
+const helpModal = document.getElementById('help-modal');
+const closeModalBtn = document.getElementById('close-modal-btn');
 
 /**
  * Normalizes input: extracts channel username from URL, trims, converts to lowercase
@@ -169,6 +174,12 @@ tilesContainer.addEventListener('scroll', () => {
   }
 });
 
+// Wire up collapsible chat sidebar button
+collapseChatBtn.addEventListener('click', () => {
+  const isCollapsed = chatContainer.classList.toggle('collapsed');
+  collapseChatBtn.textContent = isCollapsed ? '◀' : '▶';
+});
+
 // Listen for state changes (pub/sub synchronization)
 onChannelsChange((currentChannels, action, channel) => {
   if (action === 'add') {
@@ -187,6 +198,11 @@ onChannelsChange((currentChannels, action, channel) => {
     updateQualities();
   }
   updateEmptyState(currentChannels);
+
+  // Update page title to show active streams list
+  document.title = currentChannels.length > 0
+    ? `StreamWatchtower (${currentChannels.join(', ')})`
+    : 'StreamWatchtower — Multi-Stream Viewer for Twitch';
 });
 
 // Keyboard Shortcuts (Hotkeys)
@@ -218,3 +234,26 @@ window.addEventListener('keydown', (e) => {
 const initialChannels = getChannels();
 initialChannels.forEach(nick => renderTile(nick));
 updateEmptyState(initialChannels);
+
+// Initial title setup
+document.title = initialChannels.length > 0
+  ? `StreamWatchtower (${initialChannels.join(', ')})`
+  : 'StreamWatchtower — Multi-Stream Viewer for Twitch';
+
+// Help Modal Handlers
+if (authHelpBtn && helpModal && closeModalBtn) {
+  authHelpBtn.addEventListener('click', () => {
+    helpModal.classList.remove('hidden');
+  });
+
+  closeModalBtn.addEventListener('click', () => {
+    helpModal.classList.add('hidden');
+  });
+
+  // Close modal when clicking outside of modal-content
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) {
+      helpModal.classList.add('hidden');
+    }
+  });
+}

@@ -53,9 +53,12 @@ export function enterFocus(nick) {
     }
   });
 
-  // Load the chat iframe for the focused channel
+  // Load the chat iframe for the focused channel inside the wrapper
   const hostname = window.location.hostname || 'localhost';
-  chatContainer.innerHTML = `<iframe src="https://www.twitch.tv/embed/${nick}/chat?parent=${hostname}&darkpopout" height="100%" width="100%"></iframe>`;
+  const iframeWrapper = chatContainer.querySelector('.chat-iframe-wrapper');
+  if (iframeWrapper) {
+    iframeWrapper.innerHTML = `<iframe src="https://www.twitch.tv/embed/${nick}/chat?parent=${hostname}&darkpopout" height="100%" width="100%"></iframe>`;
+  }
   chatContainer.classList.remove('hidden');
 }
 
@@ -85,5 +88,16 @@ export function exitFocus() {
 
   // Hide and clean up the chat container to stop loading the iframe
   chatContainer.classList.add('hidden');
-  chatContainer.innerHTML = '';
+  const iframeWrapper = chatContainer.querySelector('.chat-iframe-wrapper');
+  if (iframeWrapper) {
+    iframeWrapper.innerHTML = '';
+  }
+
+  // Reset collapsible chat sidebar state
+  chatContainer.classList.remove('collapsed');
+  const collapseChatBtn = document.getElementById('collapse-chat-btn');
+  if (collapseChatBtn) {
+    collapseChatBtn.textContent = '▶';
+  }
 }
+

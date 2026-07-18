@@ -10,6 +10,9 @@ const readyPlayers = new Set();
 // Lock flag to prevent infinite loops during audio state synchronization
 let isSyncingAudio = false;
 
+// Track the currently unmuted channel name to avoid redundant changes and event loops
+let currentUnmutedChannel = null;
+
 /**
  * Creates a Twitch Player in the specified container.
  * @param {string} channel - Channel nickname (lowercase)
@@ -41,14 +44,11 @@ export function createPlayer(channel, container) {
       console.log(`[Player] READY event for: ${channel}`);
       readyPlayers.add(channel);
       
-      // Delay play slightly after READY to let Twitch iframe initialize stably
-      setTimeout(() => {
-        try {
-          player.play();
-        } catch (err) {
-          console.warn(`[Player] Failed to play on READY for ${channel}:`, err);
-        }
-      }, 150);
+      try {
+        player.play();
+      } catch (err) {
+        console.warn(`[Player] Failed to play on READY for ${channel}:`, err);
+      }
     });
 
     // Event: Playback Start
@@ -91,6 +91,18 @@ export function createPlayer(channel, container) {
       }
     });
 
+    // Event: Channel goes offline
+    player.addEventListener(Twitch.Player.OFFLINE, () => {
+      console.log(`[Player] OFFLINE event for: ${channel}`);
+      toggleOfflineBadge(channel, true);
+    });
+
+    // Event: Channel goes online
+    player.addEventListener(Twitch.Player.ONLINE, () => {
+      console.log(`[Player] ONLINE event for: ${channel}`);
+      toggleOfflineBadge(channel, false);
+    });
+
     return player;
   } catch (error) {
     console.error(`Failed to create Twitch player for channel "${channel}":`, error);
@@ -114,6 +126,9 @@ export function destroyPlayer(channel) {
     }
     players.delete(channel);
     readyPlayers.delete(channel);
+    if (currentUnmutedChannel === channel) {
+      currentUnmutedChannel = null;
+    }
   }
 }
 
@@ -142,9 +157,14 @@ export function getAllPlayers() {
  * @param {string|null} targetNick - Channel nickname to unmute
  */
 export function setAudioTo(targetNick) {
+  if (targetNick === currentUnmutedChannel) {
+    return;
+  }
+  
   if (isSyncingAudio) return;
   isSyncingAudio = true;
   
+  currentUnmutedChannel = targetNick;
   console.log(`[Audio] Switching audio exclusively to: ${targetNick}`);
   
   players.forEach((player, channel) => {
@@ -159,16 +179,10 @@ export function setAudioTo(targetNick) {
 
     try {
       if (channel === targetNick) {
-        // Wait 150ms for layout transition to settle before calling unmute + play
-        setTimeout(() => {
-          try {
-            player.setMuted(false);
-            player.play();
-            console.log(`[Audio] Unmuted and played: ${channel}`);
-          } catch (e) {
-            console.warn(`Deferred play/unmute failed for ${channel}:`, e);
-          }
-        }, 150);
+        // Set muted and play immediately to preserve user gesture context
+        player.setMuted(false);
+        player.play();
+        console.log(`[Audio] Unmuted and played (synchronous): ${channel}`);
 
         if (muteBtn) {
           muteBtn.innerHTML = '🔊';
@@ -176,16 +190,9 @@ export function setAudioTo(targetNick) {
           muteBtn.title = 'Mute';
         }
       } else {
+        // Mute other streams immediately
         player.setMuted(true);
-        
-        // Ensure background streams keep playing muted
-        setTimeout(() => {
-          try {
-            player.play();
-          } catch (e) {
-            console.warn(`Deferred background play failed for ${channel}:`, e);
-          }
-        }, 150);
+        player.play(); // Keep background streams playing (muted)
 
         if (muteBtn) {
           muteBtn.innerHTML = '🔇';
@@ -241,4 +248,28 @@ function showPlaybackBlockedHint(channel) {
   });
 
   tile.appendChild(hint);
+}
+
+/**
+ * Toggles the "OFFLINE" status badge on a channel tile.
+ * @param {string} channel 
+ * @param {boolean} isOffline 
+ */
+function toggleOfflineBadge(channel, isOffline) {
+  const tile = document.querySelector(`.tile[data-channel="${channel}"]`);
+  if (!tile) return;
+
+  const existingBadge = tile.querySelector('.offline-badge');
+  if (isOffline) {
+    if (!existingBadge) {
+      const badge = document.createElement('div');
+      badge.className = 'offline-badge';
+      badge.textContent = 'OFFLINE';
+      tile.appendChild(badge);
+    }
+  } else {
+    if (existingBadge) {
+      existingBadge.remove();
+    }
+  }
 }
