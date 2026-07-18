@@ -229,7 +229,7 @@ function showPlaybackBlockedHint(channel) {
 
   const hint = document.createElement('div');
   hint.className = 'playback-blocked-hint';
-  hint.textContent = 'Click to enable audio / Кликните для включения звука';
+  hint.textContent = 'Click to enable audio';
 
   // Enable audio when the user clicks the warning hint
   hint.addEventListener('click', (e) => {
