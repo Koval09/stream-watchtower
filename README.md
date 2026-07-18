@@ -70,7 +70,8 @@ http://localhost:8000/?channels=shroud,xqcow,ninja
 
 ## ⚠️ Important Warnings & Twitch Embed Limits
 - **Twitch 3-Stream Embed Limit:** Twitch limits third-party embedded streams. It is highly recommended to **not add more than 3 streams** at a time.
-- **"Commercial break in progress" & Ads:** Twitch serves a permanent "Commercial break in progress" screen to third-party embeds if multiple streams are running at the same time. Sometimes, logging in inside the player's chat iframe does not help because browsers block third-party cookies by default (which isolates the embed session). Even after logging in, Twitch may still throw streams into ad screens after a few minutes.
+- **"Commercial break in progress" & Ads:** Twitch serves a "Commercial break in progress" screen to third-party embeds if multiple streams are running at the same time. Sometimes, logging in inside the player's chat iframe does not help because browsers block third-party cookies by default (which isolates the embed session). Even after logging in, Twitch may still throw streams into ad screens.
+  - **Important Tip:** If you see the "Commercial break in progress" screen, in theory, if you wait until the countdown timer finishes, it will not appear again for that session. However, make sure the stream itself is actually **playing** (not paused) so the timer countdown progresses instead of freezing.
   - **Workaround:** Add `[*.]twitch.tv` to your browser's "Allowed to use third-party cookies" exception list (Chrome settings -> Privacy and security -> Third-party cookies) and sign in inside the Chat embed to share your Twitch Turbo or subscribed account credentials.
 
 ## Contributing
